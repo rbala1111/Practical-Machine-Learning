@@ -20,8 +20,7 @@ Two datasets were available for this project:
 2.       "pml-testing.csv" - A set of 20 data points for which the classification must be determined without knowledge of the correct classification. 
 
 Now we can load the data, remove near zero covariates and finally remove covariates with more than 80% missing values since these variables will not be useful for prediction.
-
-```r
+```{r}
 library(ggplot2)
 library(caret)
 library(randomForest)
@@ -39,120 +38,42 @@ training <- training[, !nav]
 
 # Finding any strong correlation 
 Next we want to find strong predictors that correlates with `classe` so that we can build a model based on those predictors. 
-
-```r
+```{r}
 # calculating correlations
 cor <- abs(sapply(colnames(training[, -ncol(training)]), function(x) cor(as.numeric(training[, x]), as.numeric(training$classe), method = "spearman")))
 # plotting predictors 
 summary(cor)
-```
-
-```
-##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-##  0.0015  0.0147  0.0524  0.0862  0.1370  0.3170
-```
-
-```r
 ## plot(training[, names(which.max(cor))], training[, names(which.max(cor[-which.max(cor)]))],
 ##     col = training$classe, pch = 19, cex = 0.1, xlab = names(which.max(cor)),
 ##     ylab = names(which.max(cor[-which.max(cor)])))
 ```
 
-The training set has 19622 samples and 57 potential predictors after filtering. There seems to be no strong predictors that correlates with `classe` outcome, so in this case, linear regression model is probably not suitable. We want to try Boosting and random forests algorithms which may generate more robust predictions for our data.
+The training set has `r nrow(training)` samples and `r ncol(training) - 1` potential predictors after filtering. There seems to be no strong predictors that correlates with `classe` outcome, so in this case, linear regression model is probably not suitable. We want to try Boosting and random forests algorithms which may generate more robust predictions for our data.
 
 # Model 1:  Boosting Algorithm
 Let us use boosting algorithm method with the given data. Let us fit model with boosting algorithm and 10-fold cross validation to predict `classe` with all other predictors and then plot accuracy of this model on the scale `[0.9, 1]`.
-
-```r
+```{r}
 set.seed(123)
- boostFit <- train(classe ~ ., method = "gbm", data = training, verbose = F, trControl = trainControl(method = "cv", number = 10))
+## boostFit <- train(classe ~ ., method = "gbm", data = training, verbose = F, trControl =
+##trainControl(method = "cv", number = 10))
 boostFit
-```
-
-```
-## Stochastic Gradient Boosting 
-## 
-## 19622 samples
-##    57 predictor
-##     5 classes: 'A', 'B', 'C', 'D', 'E' 
-## 
-## No pre-processing
-## Resampling: Cross-Validated (10 fold) 
-## 
-## Summary of sample sizes: 17660, 17661, 17661, 17659, 17659, 17660, ... 
-## 
-## Resampling results across tuning parameters:
-## 
-##   interaction.depth  n.trees  Accuracy  Kappa  Accuracy SD  Kappa SD
-##   1                   50      0.8       0.8    0.011        0.014   
-##   1                  100      0.9       0.9    0.012        0.015   
-##   1                  150      0.9       0.9    0.009        0.012   
-##   2                   50      1.0       0.9    0.008        0.011   
-##   2                  100      1.0       1.0    0.003        0.004   
-##   2                  150      1.0       1.0    0.002        0.003   
-##   3                   50      1.0       1.0    0.004        0.005   
-##   3                  100      1.0       1.0    0.002        0.002   
-##   3                  150      1.0       1.0    0.001        0.001   
-## 
-## Tuning parameter 'shrinkage' was held constant at a value of 0.1
-## Accuracy was used to select the optimal model using  the largest value.
-## The final values used for the model were n.trees = 150,
-##  interaction.depth = 3 and shrinkage = 0.1.
-```
-
-```r
 plot(boostFit, ylim = c(0.9, 1))
 ```
-
-![plot of chunk unnamed-chunk-3](figure/unnamed-chunk-3.png) 
 The boosting algorithm generated a good model with accuracy = 0.997.
 
 # Model 2: Random Forests 
 Let us now fit model with random forests algorithm and 10-fold cross validation to predict `classe` with all other predictors and then plot accuracy of the model on the `same scale`as boosting model.
-
-```r
+```{r}
 set.seed(123)
- rfFit <- train(classe ~ ., method = "rf", data = training, importance = T, trControl = trainControl(method = "cv", number = 10))
+## rfFit <- train(classe ~ ., method = "rf", data = training, importance = T, trControl =
+## trainControl(method = "cv", number = 10))
 rfFit
-```
-
-```
-## Random Forest 
-## 
-## 19622 samples
-##    57 predictor
-##     5 classes: 'A', 'B', 'C', 'D', 'E' 
-## 
-## No pre-processing
-## Resampling: Cross-Validated (10 fold) 
-## 
-## Summary of sample sizes: 17660, 17661, 17659, 17660, 17658, 17660, ... 
-## 
-## Resampling results across tuning parameters:
-## 
-##   mtry  Accuracy  Kappa  Accuracy SD  Kappa SD
-##    2    1         1      3e-03        3e-03   
-##   40    1         1      5e-04        7e-04   
-##   79    1         1      5e-04        6e-04   
-## 
-## Accuracy was used to select the optimal model using  the largest value.
-## The final value used for the model was mtry = 40.
-```
-
-```r
 plot(rfFit, ylim = c(0.9, 1))
-```
-
-![plot of chunk unnamed-chunk-4](figure/unnamed-chunk-41.png) 
-
-```r
 imp <- varImp(rfFit)$importance
 imp$max <- apply(imp, 1, max)
 imp <- imp[order(imp$max, decreasing = T), ] 
 print(plot(varImp(rfFit, scale = FALSE)))
 ```
-
-![plot of chunk unnamed-chunk-4](figure/unnamed-chunk-42.png) 
 
 The random forests algorithm generated a very accurate model with accuracy close to 1. Compared to boosting model, this model generally has better performance in terms of accuracy as we see from the plots.
 
@@ -161,42 +82,15 @@ Since a boosting and random forest models subsample the training data and covari
 
 # Concluding Final model and prediction
 * Comparing model accuracy of the two models generated, random forests and boosting, random forests model has overall better accuracy. So, I'll use this model for prediction.
-* The final random forests model contains 500 trees with 40 variables tried at each split. The five most important predictors in this model are raw_timestamp_part_1, roll_belt, num_window, pitch_forearm, cvtd_timestamp30/11/2011 17:12.
+* The final random forests model contains 500 trees with 40 variables tried at each split. The five most important predictors in this model are `r rownames(imp)[1:5]`.
 
 # Out of Sample Error
 As described by the random forest predictions, estimated out of sample error rate for the random forests model is `0.04%` as reported by the final model.
-
-```r
+```{r}
  # finalinzing model
 rfFit$finalModel
-```
-
-```
-## 
-## Call:
-##  randomForest(x = x, y = y, mtry = param$mtry, importance = ..1) 
-##                Type of random forest: classification
-##                      Number of trees: 500
-## No. of variables tried at each split: 40
-## 
-##         OOB estimate of  error rate: 0.04%
-## Confusion matrix:
-##      A    B    C    D    E class.error
-## A 5580    0    0    0    0   0.0000000
-## B    1 3796    0    0    0   0.0002634
-## C    0    3 3419    0    0   0.0008767
-## D    0    0    1 3214    1   0.0006219
-## E    0    0    0    1 3606   0.0002772
-```
-
-```r
  # predicting
 (prediction <- as.character(predict(rfFit, testing)))
-```
-
-```
-##  [1] "B" "A" "B" "A" "A" "E" "D" "B" "A" "A" "B" "C" "B" "A" "E" "E" "A"
-## [18] "B" "B" "B"
 ```
 
 # Conclusion
@@ -207,8 +101,7 @@ The final predictions for the classe from our final model are the following;
  
 These output results are written to a file for automatic grading.
 
-
-```r
+```{r}
 # write prediction files
 pml_write_files = function(x){
   n = length(x)
