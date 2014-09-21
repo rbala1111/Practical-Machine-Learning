@@ -59,7 +59,7 @@ The boosting algorithm generated a good model with accuracy = 0.997.
 
 ![alt text] [plot1]
 
-[plot1]: "./BoosingPlot.PNG" 
+[plot1]: "BoosingPlot.PNG" 
 
 # Model 2: Random Forests 
 Let us now fit model with random forests algorithm and 10-fold cross validation to predict `classe` with all other predictors and then plot accuracy of the model on the `same scale`as boosting model.
@@ -70,13 +70,18 @@ rfFit
 plot(rfFit, ylim = c(0.9, 1))
 imp <- varImp(rfFit)$importance
 imp$max <- apply(imp, 1, max)
-imp <- imp[order(imp$max, decreasing = T), 
+imp <- imp[order(imp$max, decreasing = T), ] 
+print(plot(varImp(rfFit, scale = FALSE)))
 ```
-The random forests algorithm generated a very accurate model with accuracy close to 1. Compared to boosting model, this model generally has better performance in terms of accuracy as we see from the plots.
-
 ![alt text] [plot2]
 
-[plot2]: "./RF-Plot.PNG" 
+[plot2]: "variable-importance.PNG" 
+
+The random forests algorithm generated a very accurate model with accuracy close to 1. Compared to boosting model, this model generally has better performance in terms of accuracy as we see from the plots.
+
+![alt text] [plot3]
+
+[plot3]: "RF-Plot.PNG" 
 
 # Cross Validation
 Since a boosting and random forest models subsample the training data and covariates several times and averages the results of the multiple trees produced, it is essentially is doing a form of cross validation. Having achieved the primary goal of the model to be able to predict the classifications of the "pml-testing.csv" cases, there was no need to do cross validation for this purpose.
