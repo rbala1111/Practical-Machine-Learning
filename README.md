@@ -1,7 +1,7 @@
 Practical-Machine-Learning Course - Project work
 ================================================
 
-To see the HTML format, please click [here] (https://github.com/rbala1111/Practical-Machine-Learning.git/Practical-MachineLearning-Writeup.html)
+To see the HTML format, please click [here] (http://rbala1111.github.io/Practical-MachineLearning-Writeup.html)
 
 # List of Files and their descriptions
 
